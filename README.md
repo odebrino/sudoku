@@ -8,8 +8,8 @@ It implements:
 
 ---
 
-👨‍💻 Authors
-ODE BRINO Rafael
-RIZO Maria Eduarda
+👨‍💻 Authors:
+- ODE BRINO Rafael
+- RIZO Maria Eduarda
 
 (ENSTA — 2025/2026)
