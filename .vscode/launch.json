@@ -1,0 +1,33 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run sudoku",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/sudoku",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": true,
+      "MIMode": "gdb",
+      "miDebuggerPath": "/usr/bin/gdb",
+      "preLaunchTask": "build sudoku"
+    },
+    {
+      "name": "Run benchmark_k",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/benchmark_k",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": true,
+      "MIMode": "gdb",
+      "miDebuggerPath": "/usr/bin/gdb",
+      "preLaunchTask": "build benchmark_k"
+    }
+  ]
+}

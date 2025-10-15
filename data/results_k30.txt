@@ -1,0 +1,27 @@
+Benchmark Results for k=30
+=========================================
+
+Solver=Backtracking
+Min=0.0000113450
+Max=0.0059578060
+Median=0.0000184025
+Mean=0.0000777089
+
+Solver=MRV_Bitmask
+Min=0.0000193590
+Max=0.0000300090
+Median=0.0000245300
+Mean=0.0000246901
+
+Solver=Constraint
+Min=0.0000234040
+Max=0.0000324100
+Median=0.0000268150
+Mean=0.0000271118
+
+Solver=DLX
+Min=0.0000115460
+Max=0.0000311970
+Median=0.0000120500
+Mean=0.0000123393
+

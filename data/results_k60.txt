@@ -1,0 +1,27 @@
+Benchmark Results for k=60
+=========================================
+
+Solver=Backtracking
+Min=0.0000119530
+Max=0.1460253490
+Median=0.0000716125
+Mean=0.0046105507
+
+Solver=MRV_Bitmask
+Min=0.0000218530
+Max=0.0023896280
+Median=0.0000273970
+Mean=0.0001145026
+
+Solver=Constraint
+Min=0.0000218860
+Max=0.0000731150
+Median=0.0000510695
+Mean=0.0000518331
+
+Solver=DLX
+Min=0.0000177960
+Max=0.0000450070
+Median=0.0000192620
+Mean=0.0000196478
+

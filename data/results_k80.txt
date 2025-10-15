@@ -1,0 +1,27 @@
+Benchmark Results for k=80
+=========================================
+
+Solver=Backtracking
+Min=0.0000158010
+Max=0.0043653640
+Median=0.0000345640
+Mean=0.0000791842
+
+Solver=MRV_Bitmask
+Min=0.0000261610
+Max=0.0000393440
+Median=0.0000324795
+Mean=0.0000326011
+
+Solver=Constraint
+Min=0.0000716150
+Max=0.0001361640
+Median=0.0000839755
+Mean=0.0000865899
+
+Solver=DLX
+Min=0.0000290210
+Max=0.0000685980
+Median=0.0000299240
+Mean=0.0000305384
+

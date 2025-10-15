@@ -1,0 +1,27 @@
+Benchmark Results for k=15
+=========================================
+
+Solver=Backtracking
+Min=0.0000098980
+Max=0.0000296940
+Median=0.0000166940
+Mean=0.0000161943
+
+Solver=MRV_Bitmask
+Min=0.0000166960
+Max=0.0000412520
+Median=0.0000189810
+Mean=0.0000191436
+
+Solver=Constraint
+Min=0.0000112590
+Max=0.0000885190
+Median=0.0000186930
+Mean=0.0000191548
+
+Solver=DLX
+Min=0.0000051470
+Max=0.0000429090
+Median=0.0000054630
+Mean=0.0000061157
+

@@ -1,0 +1,16 @@
+# Arquivos de resultados/plots
+*.png
+*.svg
+*.jpg
+
+# Pastas temporárias
+__pycache__/
+*.pyc
+
+# Ambientes virtuais
+.venv/
+venv/
+
+# Arquivos de build C
+build/
+*.o

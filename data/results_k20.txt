@@ -1,0 +1,27 @@
+Benchmark Results for k=20
+=========================================
+
+Solver=Backtracking
+Min=0.0000069030
+Max=0.0000363590
+Median=0.0000124305
+Mean=0.0000125415
+
+Solver=MRV_Bitmask
+Min=0.0000123410
+Max=0.0000193960
+Median=0.0000144960
+Mean=0.0000147322
+
+Solver=Constraint
+Min=0.0000117000
+Max=0.0000174320
+Median=0.0000141220
+Mean=0.0000142025
+
+Solver=DLX
+Min=0.0000062120
+Max=0.0000191460
+Median=0.0000066490
+Mean=0.0000068168
+

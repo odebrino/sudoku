@@ -1,0 +1,27 @@
+Benchmark Results for k=35
+=========================================
+
+Solver=Backtracking
+Min=0.0000081440
+Max=0.0000320120
+Median=0.0000198800
+Mean=0.0000193647
+
+Solver=MRV_Bitmask
+Min=0.0000157090
+Max=0.0001656960
+Median=0.0000189040
+Mean=0.0000228909
+
+Solver=Constraint
+Min=0.0000137690
+Max=0.0000266040
+Median=0.0000195345
+Mean=0.0000192075
+
+Solver=DLX
+Min=0.0000097460
+Max=0.0000271420
+Median=0.0000104650
+Mean=0.0000108172
+

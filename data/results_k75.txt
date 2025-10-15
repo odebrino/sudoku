@@ -1,0 +1,27 @@
+Benchmark Results for k=75
+=========================================
+
+Solver=Backtracking
+Min=0.0000135580
+Max=0.0016838190
+Median=0.0000294840
+Mean=0.0000760016
+
+Solver=MRV_Bitmask
+Min=0.0000258630
+Max=0.0000456100
+Median=0.0000322180
+Mean=0.0000322128
+
+Solver=Constraint
+Min=0.0000671190
+Max=0.0001193300
+Median=0.0000831115
+Mean=0.0000842551
+
+Solver=DLX
+Min=0.0000270880
+Max=0.0001143160
+Median=0.0000279405
+Mean=0.0000299417
+

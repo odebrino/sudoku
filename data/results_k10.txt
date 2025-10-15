@@ -1,0 +1,27 @@
+Benchmark Results for k=10
+=========================================
+
+Solver=Backtracking
+Min=0.0000095220
+Max=0.0000214370
+Median=0.0000131370
+Mean=0.0000132274
+
+Solver=MRV_Bitmask
+Min=0.0000102280
+Max=0.0000184800
+Median=0.0000136060
+Mean=0.0000137269
+
+Solver=Constraint
+Min=0.0000111640
+Max=0.0000169050
+Median=0.0000137280
+Mean=0.0000137783
+
+Solver=DLX
+Min=0.0000044000
+Max=0.0000190660
+Median=0.0000049285
+Mean=0.0000050575
+

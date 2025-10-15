@@ -1,0 +1,27 @@
+Benchmark Results for k=5
+=========================================
+
+Solver=Backtracking
+Min=0.0000058360
+Max=0.0492295860
+Median=0.0000171215
+Mean=0.0005082487
+
+Solver=MRV_Bitmask
+Min=0.0000062200
+Max=0.0000271450
+Median=0.0000104115
+Mean=0.0000106367
+
+Solver=Constraint
+Min=0.0000092520
+Max=0.0000644910
+Median=0.0000116590
+Mean=0.0000127963
+
+Solver=DLX
+Min=0.0000040250
+Max=0.0000332360
+Median=0.0000043420
+Mean=0.0000049488
+

@@ -1,0 +1,27 @@
+Benchmark Results for k=55
+=========================================
+
+Solver=Backtracking
+Min=0.0000106770
+Max=0.0810659840
+Median=0.0000939325
+Mean=0.0026565155
+
+Solver=MRV_Bitmask
+Min=0.0000212940
+Max=0.0013565600
+Median=0.0000260705
+Mean=0.0000445361
+
+Solver=Constraint
+Min=0.0000148880
+Max=0.0000611480
+Median=0.0000386255
+Mean=0.0000388116
+
+Solver=DLX
+Min=0.0000159200
+Max=0.0000341430
+Median=0.0000169755
+Mean=0.0000172700
+

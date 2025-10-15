@@ -1,0 +1,27 @@
+Benchmark Results for k=25
+=========================================
+
+Solver=Backtracking
+Min=0.0000103550
+Max=0.0001614860
+Median=0.0000153440
+Mean=0.0000167711
+
+Solver=MRV_Bitmask
+Min=0.0000096090
+Max=0.0000200570
+Median=0.0000145420
+Mean=0.0000145907
+
+Solver=Constraint
+Min=0.0000122880
+Max=0.0000196740
+Median=0.0000152185
+Mean=0.0000153252
+
+Solver=DLX
+Min=0.0000073920
+Max=0.0000279480
+Median=0.0000103710
+Mean=0.0000098348
+

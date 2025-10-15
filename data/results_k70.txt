@@ -1,0 +1,27 @@
+Benchmark Results for k=70
+=========================================
+
+Solver=Backtracking
+Min=0.0000104540
+Max=3.4588484380
+Median=0.0000372570
+Mean=0.0372126125
+
+Solver=MRV_Bitmask
+Min=0.0000266590
+Max=0.0003556550
+Median=0.0000339200
+Mean=0.0000377143
+
+Solver=Constraint
+Min=0.0000553240
+Max=0.0001015870
+Median=0.0000756040
+Mean=0.0000751558
+
+Solver=DLX
+Min=0.0000223720
+Max=0.0000598210
+Median=0.0000234350
+Mean=0.0000242061
+

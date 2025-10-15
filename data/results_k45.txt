@@ -1,0 +1,27 @@
+Benchmark Results for k=45
+=========================================
+
+Solver=Backtracking
+Min=0.0000104110
+Max=0.0004848060
+Median=0.0000204970
+Mean=0.0000368175
+
+Solver=MRV_Bitmask
+Min=0.0000178100
+Max=0.0000249770
+Median=0.0000206655
+Mean=0.0000209702
+
+Solver=Constraint
+Min=0.0000174230
+Max=0.0000405810
+Median=0.0000298455
+Mean=0.0000295084
+
+Solver=DLX
+Min=0.0000126760
+Max=0.0000290070
+Median=0.0000132730
+Mean=0.0000136206
+
