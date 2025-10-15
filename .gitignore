@@ -1,0 +1,12 @@
+
+# --- C project ignore patterns ---
+build/
+*.o
+*.out
+*.a
+*.so
+*.dSYM/
+*.swp
+*.log
+.vscode/
+.venv/

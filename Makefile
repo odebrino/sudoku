@@ -1,51 +1,78 @@
-# --- Compiler setup ---
-CC = gcc
-CFLAGS = -O2 -Wall -Iinclude
-BIN_DIR = build
+# ============================================================
+#  Sudoku Project - Optimized Makefile
+# ============================================================
 
-# --- Source directories ---
-SRC_DIR = src
-GEN_DIR = $(SRC_DIR)/generator
-SOLVER_DIR = $(SRC_DIR)/solvers
-BENCH_DIR = $(SRC_DIR)/benchmark
-INT_DIR = $(SRC_DIR)/interface
+CC       := gcc
+CFLAGS   := -std=c11 -Wall -Wextra -Iinclude -MMD -MP
+OPT      ?= -O2
+DEBUG    ?= 0
+BIN_DIR  := build
+OBJ_DIR  := $(BIN_DIR)/obj
 
-# --- Source files ---
-SOLVERS = $(SOLVER_DIR)/backtracking.c \
-          $(SOLVER_DIR)/backtracking_mrv_bitmask.c \
-          $(SOLVER_DIR)/constrain_propagation.c \
-          $(SOLVER_DIR)/dlx.c
+ifeq ($(DEBUG),1)
+    CFLAGS += -g -O0 -DDEBUG
+else
+    CFLAGS += $(OPT)
+endif
 
-GENERATOR = $(GEN_DIR)/generator.c
-INTERFACE = $(INT_DIR)/main.c
-BENCHMARK = $(BENCH_DIR)/benchmark.c
-DATASET = $(BENCH_DIR)/generate_datasets.c
+SRC_DIR  := src
+GEN_DIR  := $(SRC_DIR)/generator
+SOLVER_DIR := $(SRC_DIR)/solvers
+BENCH_DIR  := $(SRC_DIR)/benchmark
+INT_DIR    := $(SRC_DIR)/interface
 
-# --- Binaries ---
-SUDOKU_BIN = $(BIN_DIR)/sudoku
-BENCH_BIN = $(BIN_DIR)/benchmark
-DATASET_BIN = $(BIN_DIR)/generate_datasets
+SOLVERS   := $(wildcard $(SOLVER_DIR)/*.c)
+GENERATOR := $(GEN_DIR)/generator.c
+INTERFACE := $(INT_DIR)/main.c
+BENCHMARK := $(BENCH_DIR)/benchmark.c
+DATASET   := $(BENCH_DIR)/generate_datasets.c
 
-# --- Default rule ---
-all: $(SUDOKU_BIN) $(BENCH_BIN) $(DATASET_BIN)
+SUDOKU_BIN   := $(BIN_DIR)/sudoku
+BENCH_BIN    := $(BIN_DIR)/benchmark
+DATASET_BIN  := $(BIN_DIR)/generate_datasets
 
-# --- Ensure build directory exists ---
-$(BIN_DIR):
-	mkdir -p $(BIN_DIR)
+OBJS_SOLVERS := $(SOLVERS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+OBJS_GEN     := $(GENERATOR:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+OBJS_INT     := $(INTERFACE:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+OBJS_BENCH   := $(BENCHMARK:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+OBJS_DATASET := $(DATASET:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+DEPS := $(OBJS_SOLVERS:.o=.d) $(OBJS_GEN:.o=.d) $(OBJS_INT:.o=.d) $(OBJS_BENCH:.o=.d) $(OBJS_DATASET:.o=.d)
 
-# --- Build rules ---
-$(SUDOKU_BIN): $(INTERFACE) $(GENERATOR) $(SOLVERS) | $(BIN_DIR)
-	$(CC) $(CFLAGS) $^ -o $@
+all: dirs $(SUDOKU_BIN) $(BENCH_BIN) $(DATASET_BIN)
 
-$(BENCH_BIN): $(BENCHMARK) $(GENERATOR) $(SOLVERS) | $(BIN_DIR)
-	$(CC) $(CFLAGS) $^ -o $@
+dirs:
+	@mkdir -p $(BIN_DIR) $(OBJ_DIR)
 
-$(DATASET_BIN): $(DATASET) $(GENERATOR) | $(BIN_DIR)
-	$(CC) $(CFLAGS) $^ -o $@
+$(SUDOKU_BIN): $(OBJS_INT) $(OBJS_GEN) $(OBJS_SOLVERS)
+	@echo "\033[1;32m[LD]\033[0m $@"
+	@$(CC) $(CFLAGS) $^ -o $@
 
-# --- Cleanup ---
+$(BENCH_BIN): $(OBJS_BENCH) $(OBJS_GEN) $(OBJS_SOLVERS)
+	@echo "\033[1;32m[LD]\033[0m $@"
+	@$(CC) $(CFLAGS) $^ -o $@
+
+$(DATASET_BIN): $(OBJS_DATASET) $(OBJS_GEN)
+	@echo "\033[1;32m[LD]\033[0m $@"
+	@$(CC) $(CFLAGS) $^ -o $@
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(dir $@)
+	@echo "\033[1;34m[CC]\033[0m $<"
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+run: $(SUDOKU_BIN)
+	@./$(SUDOKU_BIN)
+
+bench: $(BENCH_BIN)
+	@./$(BENCH_BIN)
+
+datasets: $(DATASET_BIN)
+	@./$(DATASET_BIN)
+
 clean:
-	rm -rf $(BIN_DIR)
-	find $(SRC_DIR) -name '*.o' -delete
+	@echo "\033[1;31m[RM]\033[0m Cleaning..."
+	@rm -rf $(BIN_DIR)
 
-.PHONY: all clean
+-include $(DEPS)
+
+.PHONY: all clean dirs run bench datasets
