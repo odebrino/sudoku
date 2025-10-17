@@ -1,64 +1,67 @@
+#include "trace_noop.h"
+#ifndef TR_INIT
+#define TR_INIT(x) ((void)0)
+#define TR_ENTER() ((void)0)
+#define TR_LEAVE() ((void)0)
+#define TR_CLOSE() ((void)0)
+#endif
+
+// Dataset generator for various k levels.
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <time.h>
+#include <sys/stat.h>
+#include "generator.h"
+#include "utils.h"
 
+#ifndef N
 #define N 9
-#define GRID_SIZE 81
-#define DATASET_SIZE 100
+#endif
 
-// protótipo (definido em generator.c)
-void generate_sudoku_k(int grid[N][N], int k);
-
-static void grid_to_string(int grid[N][N], char *str) {
-    int pos = 0;
-    for (int i = 0; i < N; i++)
-        for (int j = 0; j < N; j++)
-            str[pos++] = grid[i][j] + '0';
-    str[pos] = '\0';
+// ensure_dir(): helper function.
+static void ensure_dir(const char* path){
+    #ifdef _WIN32
+    _mkdir(path);
+    #else
+    struct stat st = {0};
+    if (stat(path, &st) == -1){
+        mkdir(path, 0755);
+    }
+    #endif
 }
 
-int main(int argc, char *argv[]) {
-    int ks[] = {5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80};
-    int num_ks = sizeof(ks) / sizeof(ks[0]);
+// main(): helper function.
+int main(int argc, char** argv){ (void)argc; (void)argv;
+    int ks[] = {5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80};
+  TR_INIT(NULL);
+  TR_ENTER();
+    int num = sizeof(ks)/sizeof(ks[0]);
+    int puzzles_per_k = 100;
 
-    unsigned seed = (unsigned)time(NULL);
-    if (argc >= 3) seed = (unsigned)atoi(argv[2]);
-    srand(seed);
+    ensure_dir("data");
+    ensure_dir("data/grids");
 
-    if (argc >= 2) {
-        ks[0] = atoi(argv[1]);
-        num_ks = 1;
-    }
+    for(int i=0;i<num;i++){
+        int k = ks[i];
+        char path[256];
+        snprintf(path,sizeof(path),"data/grids/k%d_grids.txt",k);
+        FILE* out = fopen(path,"w");
+        if(!out){ perror("fopen"); return 1; }
 
-    int grid[N][N];
-    char str[GRID_SIZE + 1];
-    char path[256];
-
-    printf("🌱 RNG seeded with %u\n", seed);
-
-    for (int idx = 0; idx < num_ks; idx++) {
-        int k = ks[idx];
-        snprintf(path, sizeof(path), "data/k%d_grids.txt", k);
-        FILE *f = fopen(path, "w");
-        if (!f) {
-            fprintf(stderr, "❌ Erro ao abrir %s: %s\n", path, strerror(errno));
-            continue;
+        for(int t=0;t<puzzles_per_k;t++){
+            Grid g;
+            if(!generator_new_k(k, &g)){ fprintf(stderr,"gen fail k=%d\n",k); continue; }
+            // emit 81-char line (0..9)
+            for(int r=0;r<N;r++){
+                for(int c=0;c<N;c++){
+                    fputc('0'+(g.v[r][c]%10), out);
+                }
+            }
+            fputc('\n', out);
         }
-
-        printf("📘 Gerando dataset para k=%d...\n", k);
-
-        for (int i = 0; i < DATASET_SIZE; i++) {
-            generate_sudoku_k(grid, k);
-            grid_to_string(grid, str);
-            fprintf(f, "%s\n", str);
-        }
-
-        fclose(f);
-        printf("✅ %d puzzles salvos → %s\n", DATASET_SIZE, path);
+        fclose(out);
+        printf("✅ wrote %s\n", path);
     }
-
-    printf("🎉 Geração de datasets concluída.\n");
-    return 0;
+    TR_LEAVE(); TR_CLOSE(); return 0;
 }

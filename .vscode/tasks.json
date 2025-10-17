@@ -2,40 +2,15 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build sudoku",
+            "label": "build: gui",
             "type": "shell",
-            "command": "gcc",
+            "command": "make",
             "args": [
-                "main.c",
-                "backtracking.c",
-                "backtracking_mrv_bitmask.c",
-                "constrain_propagation.c",
-                "dlx.c",
-                "generator.c",
-                "-o",
-                "sudoku",
-                "-g"
+                "build/sudoku_gui"
             ],
-            "group": "build",
-            "problemMatcher": [
-                "$gcc"
-            ]
-        },
-        {
-            "label": "build benchmark_k",
-            "type": "shell",
-            "command": "gcc",
-            "args": [
-                "benchmark_k.c",
-                "backtracking.c",
-                "backtracking_mrv_bitmask.c",
-                "constrain_propagation.c",
-                "dlx.c",
-                "generator.c",
-                "-o",
-                "benchmark_k",
-                "-g"
-            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
             "group": {
                 "kind": "build",
                 "isDefault": false
@@ -43,6 +18,64 @@
             "problemMatcher": [
                 "$gcc"
             ]
+        },
+        {
+            "label": "build: cli",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "build/sudoku_cli"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "build: all",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "all"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "clean"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "run: gui",
+            "type": "shell",
+            "command": "${workspaceFolder}/build/sudoku_gui",
+            "dependsOn": "build: gui",
+            "problemMatcher": []
+        },
+        {
+            "label": "run: cli",
+            "type": "shell",
+            "command": "${workspaceFolder}/build/sudoku_cli",
+            "dependsOn": "build: cli",
+            "problemMatcher": []
         },
         {
             "type": "cppbuild",

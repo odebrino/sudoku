@@ -1,3 +1,5 @@
+// Small helper module.
+
 #include <stdio.h>
 
 #define N 9
@@ -7,6 +9,7 @@
 // ------------------------------------------------------
 
 // Set bit for number n (1–9)
+// bit(): helper function.
 static inline int bit(int n) {
     return 1 << (n - 1);
 }
@@ -14,6 +17,7 @@ static inline int bit(int n) {
 // ------------------------------------------------------
 // Utility: find next cell with minimum remaining values
 // ------------------------------------------------------
+// find_mrv_cell(): helper function.
 static int find_mrv_cell(int grid[N][N], int rows[N], int cols[N], int boxes[N],
                          int *out_r, int *out_c) {
     int min_count = 10; // start higher than possible
@@ -48,6 +52,7 @@ static int find_mrv_cell(int grid[N][N], int rows[N], int cols[N], int boxes[N],
 // ------------------------------------------------------
 // Recursive MRV + Bitmask solver
 // ------------------------------------------------------
+// solve_mrv_recursive(): helper function.
 static int solve_mrv_recursive(int grid[N][N], int rows[N], int cols[N], int boxes[N]) {
     int r, c;
     if (!find_mrv_cell(grid, rows, cols, boxes, &r, &c))
@@ -92,6 +97,7 @@ static int solve_mrv_recursive(int grid[N][N], int rows[N], int cols[N], int box
  * the solved grid to stdout and returns 1 if a solution is found,
  * otherwise returns 0. The input grid is left unmodified.
  */
+// solve_backtracking_mrv_bitmask(): helper function.
 int solve_backtracking_mrv_bitmask(int grid[N][N]) {
     printf("Solving with MRV + Bitmask Backtracking...\n");
 

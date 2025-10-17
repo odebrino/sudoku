@@ -1,5 +1,9 @@
+// Dancing Links (DLX) exact cover solver for Sudoku.
+
 #include <stdio.h>
 #include <string.h>
+#include "utils.h"
+#include "solver.h"
 
 #define N 9
 #define COLS 324             // 4 * 9 * 9
@@ -7,13 +11,19 @@
 #define MAX_NODES (ROWS*4 + COLS + 5)
 
 // Row encoding helpers for (r,c,n)
+// row_id(): helper function.
 static inline int row_id(int r, int c, int n) { return (r*81 + c*9 + n); } // 0..728
 
 // Column indexes for the 4 constraint families
+// col_cell(): helper function.
 static inline int col_cell(int r, int c)   { return r*9 + c; }                          // 0..80
+// col_rownum(): helper function.
 static inline int col_rownum(int r, int n) { return 81 + r*9 + n; }                     // 81..161
+// col_colnum(): helper function.
 static inline int col_colnum(int c, int n) { return 162 + c*9 + n; }                    // 162..242
+// col_boxnum(): helper function.
 static inline int col_boxnum(int b, int n) { return 243 + b*9 + n; }                    // 243..323
+// box_index(): helper function.
 static inline int box_index(int r, int c)  { return (r/3)*3 + (c/3); }
 
 typedef struct Node {
@@ -34,6 +44,7 @@ static int   sol_depth;
 
 // ---------- DLX core ops ----------
 
+// dlx_init_headers(): helper function.
 static void dlx_init_headers(void) {
     header.L = header.R = &header;
     header.U = header.D = &header;
@@ -53,6 +64,7 @@ static void dlx_init_headers(void) {
     }
 }
 
+// link_node_vertical(): helper function.
 static void link_node_vertical(Node *col, Node *n) {
     n->D = col;
     n->U = col->U;
@@ -62,6 +74,7 @@ static void link_node_vertical(Node *col, Node *n) {
     col->S++;
 }
 
+// link_node_horizontal(): helper function.
 static void link_node_horizontal(Node *row_head, Node *n) {
     if (row_head == NULL) {
         n->L = n->R = n;
@@ -73,6 +86,7 @@ static void link_node_horizontal(Node *row_head, Node *n) {
     }
 }
 
+// cover(): helper function.
 static void cover(Node *c) {
     c->R->L = c->L;
     c->L->R = c->R;
@@ -85,6 +99,7 @@ static void cover(Node *c) {
     }
 }
 
+// uncover(): helper function.
 static void uncover(Node *c) {
     for (Node *i = c->U; i != c; i = i->U) {
         for (Node *j = i->L; j != i; j = j->L) {
@@ -97,6 +112,7 @@ static void uncover(Node *c) {
     c->L->R = c;
 }
 
+// choose_column_minS(): helper function.
 static Node* choose_column_minS(void) {
     Node *best = header.R;
     for (Node *c = best->R; c != &header; c = c->R)
@@ -107,6 +123,7 @@ static Node* choose_column_minS(void) {
 // ---------- Build the DLX matrix rows for Sudoku candidates ----------
 // For each candidate (r,c,n) that is *allowed* by the current grid,
 // we add 4 nodes linking to the 4 constraint columns.
+// add_candidate_row(): helper function.
 static void add_candidate_row(int r, int c, int n) {
     // map constraints:
     int b = box_index(r,c);
@@ -130,6 +147,7 @@ static void add_candidate_row(int r, int c, int n) {
 }
 
 // Build rows only for currently legal candidates
+// legal_in_grid(): helper function.
 static int legal_in_grid(int grid[N][N], int r, int c, int n) {
     if (grid[r][c] != 0 && grid[r][c] != n+1) return 0;
     int val = n+1;
@@ -142,6 +160,7 @@ static int legal_in_grid(int grid[N][N], int r, int c, int n) {
     return 1;
 }
 
+// build_structure_from_grid(): helper function.
 static void build_structure_from_grid(int grid[N][N]) {
     pool_top = 0;
     sol_depth = 0;
@@ -159,6 +178,7 @@ static void build_structure_from_grid(int grid[N][N]) {
 }
 
 // “Cover” the givens to pre-restrict the search.
+// apply_givens(): helper function.
 static int apply_givens(int grid[N][N]) {
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
@@ -196,6 +216,7 @@ static int apply_givens(int grid[N][N]) {
 }
 
 // ---------- Search ----------
+// search(): helper function.
 static int search(void) {
     if (header.R == &header) return 1; // solved
     Node *c = choose_column_minS();
@@ -218,6 +239,7 @@ static int search(void) {
 }
 
 // Map chosen rows back to the grid
+// write_solution(): helper function.
 static void write_solution(int grid[N][N]) {
     for (int k = 0; k < sol_depth; k++) {
         int rid = solution[k]->row; // (r,c,n) encoded
@@ -230,6 +252,7 @@ static void write_solution(int grid[N][N]) {
 
 // ---------- Public API ----------
 
+// solve_dlx(): helper function.
 int solve_dlx(int grid[N][N]) {
     // Build DLX structure respecting current givens
     build_structure_from_grid(grid);
@@ -248,4 +271,46 @@ int solve_dlx(int grid[N][N]) {
         return 1;
     }
     return 0;
+}
+
+
+// Count solutions using DLX by exploring all exact covers (with early cap at e.g. 2)
+
+
+/* Simple DLX-based solution counter: returns 1 if solvable, 0 otherwise.
+   NOTE: Proper multi-solution counting would require enumerating multiple solutions in DLX.
+*/
+
+
+/* DLX-based solution counter (approx): tries to detect >1 solution by
+   finding one DLX solution, then attempting to force a different value
+   in one originally-empty cell and solving again.
+   Returns: 0 if unsolvable, 1 if exactly one found (approx), 2 if a second
+   solution is detected (early stop). */
+// count_solutions_dlx(): helper function.
+int count_solutions_dlx(const Grid* g, int limit){
+    if(!g || limit<=0) return 0;
+    int a[9][9];
+    for(int r=0;r<9;r++) for(int c=0;c<9;c++) a[r][c]=g->v[r][c];
+    int solved = solve_dlx(a);
+    if(!solved) return 0;
+    if(limit==1) return 1;
+    // Try to find a different solution by flipping one empty cell to a different value
+    // from the first solution.
+    for(int r=0;r<9;r++){
+        for(int c=0;c<9;c++){
+            if(g->v[r][c]!=0) continue; // only cells that were empty
+            int v=a[r][c];
+            for(int alt=1; alt<=9; alt++){
+                if(alt==v) continue;
+                int b[9][9];
+                for(int i=0;i<9;i++) for(int j=0;j<9;j++) b[i][j]=g->v[i][j];
+                b[r][c]=alt;
+                if(solve_dlx(b)){
+                    return 2; // found another solution
+                }
+            }
+        }
+    }
+    return 1;
 }

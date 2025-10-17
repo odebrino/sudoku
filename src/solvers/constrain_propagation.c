@@ -1,3 +1,5 @@
+// Small helper module.
+
 #include <stdio.h>
 #include <stdint.h>
 
@@ -16,8 +18,10 @@ static int verbose = 0;
 // Utility functions
 // ------------------------------------------------------
 
+// boxIndex(): helper function.
 static inline int boxIndex(int r, int c) { return (r / 3) * 3 + (c / 3); }
 
+// can_place(): helper function.
 static inline int can_place(int r, int c, int d) {
     for (int cc = 0; cc < N; cc++) if (grid[r][cc] == d) return 0;
     for (int rr = 0; rr < N; rr++) if (grid[rr][c] == d) return 0;
@@ -28,16 +32,19 @@ static inline int can_place(int r, int c, int d) {
     return 1;
 }
 
+// place(): helper function.
 static inline void place(int r, int c, int d) {
     grid[r][c] = d;
     if (verbose) printf("Colocando %d em (%d,%d)\n", d, r, c);
 }
 
+// unplace(): helper function.
 static inline void unplace(int r, int c) {
     if (verbose) printf("Removendo %d de (%d,%d)\n", grid[r][c], r, c);
     grid[r][c] = 0;
 }
 
+// count_bits(): helper function.
 static inline int count_bits(uint16_t m) {
     int cnt = 0;
     for (int d = 1; d <= 9; d++)
@@ -45,6 +52,7 @@ static inline int count_bits(uint16_t m) {
     return cnt;
 }
 
+// singleton_digit(): helper function.
 static inline int singleton_digit(uint16_t m) {
     for (int d = 1; d <= 9; d++)
         if (m & BIT(d)) return d;
@@ -55,6 +63,7 @@ static inline int singleton_digit(uint16_t m) {
 // Candidate recomputation and propagation
 // ------------------------------------------------------
 
+// recompute_candidates(): helper function.
 static int recompute_candidates(void) {
     for (int r = 0; r < N; r++) {
         for (int c = 0; c < N; c++) {
@@ -81,6 +90,7 @@ static int recompute_candidates(void) {
     return 1;
 }
 
+// propagate(): helper function.
 static int propagate(void) {
     if (!recompute_candidates()) return 0;
     int progress;
@@ -105,6 +115,7 @@ static int propagate(void) {
     return 1;
 }
 
+// pick_cell(): helper function.
 static int pick_cell(int *out_r, int *out_c) {
     for (int r = 0; r < N; r++)
         for (int c = 0; c < N; c++)
@@ -116,6 +127,7 @@ static int pick_cell(int *out_r, int *out_c) {
 // Recursive solver
 // ------------------------------------------------------
 
+// solve_recursive(): helper function.
 static int solve_recursive(void) {
     if (!propagate()) return 0;
 
@@ -143,6 +155,7 @@ static int solve_recursive(void) {
  * The solved grid is printed to stdout. Returns 1 on success and
  * 0 if no solution exists. The input grid is left unmodified.
  */
+// solve_constraint_propagation(): helper function.
 int solve_constraint_propagation(int input_grid[N][N]) {
     printf("Solving with Constraint Propagation + Backtracking...\n");
 

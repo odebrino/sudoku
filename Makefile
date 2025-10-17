@@ -1,78 +1,99 @@
-# ============================================================
-#  Sudoku Project - Optimized Makefile
-# ============================================================
+# ---- Sudoku Project (DLX) ----
+CC      ?= cc
+CFLAGS  ?= -O2 -Wall -Wextra -Wshadow -pedantic -std=c11 -g
+INCLUDES = -Iinclude
+LIBS    = -lm
 
-CC       := gcc
-CFLAGS   := -std=c11 -Wall -Wextra -Iinclude -MMD -MP
-OPT      ?= -O2
-DEBUG    ?= 0
-BIN_DIR  := build
-OBJ_DIR  := $(BIN_DIR)/obj
+# SDL2 (optional GUI)
+SDL_CFLAGS := $(shell pkg-config --cflags sdl2 SDL2_ttf 2>/dev/null)
+SDL_LIBS   := $(shell pkg-config --libs sdl2 SDL2_ttf 2>/dev/null)
+CFLAGS += $(SDL_CFLAGS)
+LIBS   += $(SDL_LIBS)
 
-ifeq ($(DEBUG),1)
-    CFLAGS += -g -O0 -DDEBUG
-else
-    CFLAGS += $(OPT)
-endif
+BINDIR  := build
+OBJDIR  := $(BINDIR)/obj
 
-SRC_DIR  := src
-GEN_DIR  := $(SRC_DIR)/generator
-SOLVER_DIR := $(SRC_DIR)/solvers
-BENCH_DIR  := $(SRC_DIR)/benchmark
-INT_DIR    := $(SRC_DIR)/interface
+# Common sources (utils + solvers + generator + interface helpers)
+SRC_COMMON = \
+    src/utils/grid.c \
+    src/utils/io.c \
+    src/utils/rand.c \
+    src/utils/trace.c \
+    src/solvers/rules.c \
+    src/solvers/dlx.c \
+    src/solvers/solver.c \
+    src/generator/generator.c \
+    src/interface/formatter.c \
+    src/interface/save.c
 
-SOLVERS   := $(wildcard $(SOLVER_DIR)/*.c)
-GENERATOR := $(GEN_DIR)/generator.c
-INTERFACE := $(INT_DIR)/main.c
-BENCHMARK := $(BENCH_DIR)/benchmark.c
-DATASET   := $(BENCH_DIR)/generate_datasets.c
+SRC_GUI = \
+    src/interface/gui.c \
+    src/interface/gui_draw.c \
+    src/interface/gui_events.c \
+    src/interface/gui_solver.c \
+    src/interface/gui_main.c
 
-SUDOKU_BIN   := $(BIN_DIR)/sudoku
-BENCH_BIN    := $(BIN_DIR)/benchmark
-DATASET_BIN  := $(BIN_DIR)/generate_datasets
+SRC_CLI = src/interface/cli.c
+SRC_BENCH = src/benchmark/benchmark.c
 
-OBJS_SOLVERS := $(SOLVERS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-OBJS_GEN     := $(GENERATOR:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-OBJS_INT     := $(INTERFACE:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-OBJS_BENCH   := $(BENCHMARK:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-OBJS_DATASET := $(DATASET:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-DEPS := $(OBJS_SOLVERS:.o=.d) $(OBJS_GEN:.o=.d) $(OBJS_INT:.o=.d) $(OBJS_BENCH:.o=.d) $(OBJS_DATASET:.o=.d)
+# Object list
+OBJS_COMMON := $(patsubst %.c,$(OBJDIR)/%.o,$(SRC_COMMON))
+OBJS_GUI    := $(patsubst %.c,$(OBJDIR)/%.o,$(SRC_GUI))
+OBJS_CLI    := $(patsubst %.c,$(OBJDIR)/%.o,$(SRC_CLI))
+OBJS_BENCH  := $(patsubst %.c,$(OBJDIR)/%.o,$(SRC_BENCH))
+OBJS_DATA   := $(patsubst %.c,$(OBJDIR)/%.o,$(SRC_DATASET))
 
-all: dirs $(SUDOKU_BIN) $(BENCH_BIN) $(DATASET_BIN)
+# Executables
+GUI_BIN   := $(BINDIR)/sudoku_gui
+CLI_BIN   := $(BINDIR)/sudoku_cli
+BENCH_BIN := $(BINDIR)/sudoku_bench
+DATA_BIN  := $(BINDIR)/gen_datasets
 
-dirs:
-	@mkdir -p $(BIN_DIR) $(OBJ_DIR)
+.PHONY: all gui cli bench datasets bench-run clean test run
 
-$(SUDOKU_BIN): $(OBJS_INT) $(OBJS_GEN) $(OBJS_SOLVERS)
-	@echo "\033[1;32m[LD]\033[0m $@"
-	@$(CC) $(CFLAGS) $^ -o $@
+all: gui cli bench
 
-$(BENCH_BIN): $(OBJS_BENCH) $(OBJS_GEN) $(OBJS_SOLVERS)
-	@echo "\033[1;32m[LD]\033[0m $@"
-	@$(CC) $(CFLAGS) $^ -o $@
+# Build rules
+$(GUI_BIN): $(OBJS_COMMON) $(OBJS_GUI)
+	@mkdir -p $(BINDIR)
+	$(CC) $^ $(LIBS) -o $@
 
-$(DATASET_BIN): $(OBJS_DATASET) $(OBJS_GEN)
-	@echo "\033[1;32m[LD]\033[0m $@"
-	@$(CC) $(CFLAGS) $^ -o $@
+$(CLI_BIN): $(OBJS_COMMON) $(OBJS_CLI)
+	@mkdir -p $(BINDIR)
+	$(CC) $^ $(LIBS) -o $@
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+$(BENCH_BIN): $(OBJS_COMMON) $(OBJS_BENCH)
+	@mkdir -p $(BINDIR)
+	$(CC) $^ $(LIBS) -o $@
+
+$(DATA_BIN): $(OBJS_COMMON) $(OBJS_DATA)
+	@mkdir -p $(BINDIR)
+	$(CC) $^ $(LIBS) -o $@
+
+# Pattern rule for compiling C files to object files
+$(OBJDIR)/%.o: %.c
 	@mkdir -p $(dir $@)
-	@echo "\033[1;34m[CC]\033[0m $<"
-	@$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-run: $(SUDOKU_BIN)
-	@./$(SUDOKU_BIN)
-
+gui: $(GUI_BIN)
+cli: $(CLI_BIN)
 bench: $(BENCH_BIN)
-	@./$(BENCH_BIN)
 
-datasets: $(DATASET_BIN)
-	@./$(DATASET_BIN)
+# Example benchmark run for multiple difficulties; expects data/grids/kXX_grids.txt
+bench-run: bench
+	@mkdir -p results
+	./$(BENCH_BIN) 30
+	./$(BENCH_BIN) 40
+	./$(BENCH_BIN) 50
+
+# 'make run' tries to run GUI if present
+run: gui
+	./$(GUI_BIN) || true
 
 clean:
-	@echo "\033[1;31m[RM]\033[0m Cleaning..."
-	@rm -rf $(BIN_DIR)
+	@echo "[RM] Cleaning..."
+	@rm -rf $(BINDIR)
 
--include $(DEPS)
 
-.PHONY: all clean dirs run bench datasets
+# Extra build rules
+-include mk/extras.mk

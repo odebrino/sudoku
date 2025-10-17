@@ -1,143 +1,93 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import os
-import re
+import glob
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# ============================
-# Style général
-# ============================
-plt.rcParams.update({
-    "figure.dpi": 110,
-    "savefig.dpi": 300,
-    "font.size": 12,
-    "axes.titlesize": 16,
-    "axes.labelsize": 13,
-    "legend.fontsize": 11,
-    "xtick.labelsize": 11,
-    "ytick.labelsize": 11,
-    "axes.grid": True,
-    "grid.linestyle": "--",
-    "grid.alpha": 0.45,
-    "axes.spines.top": False,
-    "axes.spines.right": False,
-})
+DATA_DIRS = ["results", "data/results"]
+OUT_DIR = "plots"
 
-# ============================
-# Chemins et regex
-# ============================
-DOSSIER_DONNEES = "/home/odebrino/ENSTA/Language C/sudoku/data"
-DOSSIER_SORTIE = "/home/odebrino/ENSTA/Language C/sudoku/plots"
-os.makedirs(DOSSIER_SORTIE, exist_ok=True)
+def find_files():
+    for d in DATA_DIRS:
+        if os.path.isdir(d):
+            files = sorted(glob.glob(os.path.join(d, "results_k*.txt")))
+            if files:
+                return d, files
+    return None, []
 
-motif = re.compile(
-    r"Solver=(\w+)\nMin=(.+)\nMax=(.+)\nMedian=(.+)\nMean=(.+)"
-)
+def read_results_file(path: str) -> "pd.DataFrame":
+    # Robust: skip any intro lines until we find a header that starts with 'name,'
+    with open(path, "r", encoding="utf-8", errors="ignore") as f:
+        lines = f.readlines()
+    header_idx = None
+    for i, line in enumerate(lines[:10]):  # search first 10 lines
+        if line.strip().lower().startswith("name,"):
+            header_idx = i
+            break
+    if header_idx is None:
+        # Try naive parse and then coerce columns if needed
+        df = pd.read_csv(path)
+        if df.shape[1] == 3 and list(df.columns) == [0, 1, 2]:
+            df.columns = ["name", "time_ms", "solved"]
+        return df
+    else:
+        return pd.read_csv(path, skiprows=header_idx)
 
-# ============================
-# Chargement des données
-# ============================
-lignes = []
-for fichier in os.listdir(DOSSIER_DONNEES):
-    if fichier.startswith("results_k") and fichier.endswith(".txt"):
-        k_match = re.findall(r"k(\d+)", fichier)
-        if not k_match:
-            continue
-        k = int(k_match[0])
-        with open(os.path.join(DOSSIER_DONNEES, fichier), "r") as f:
-            contenu = f.read()
-        for solver, minv, maxv, median, mean in motif.findall(contenu):
-            try:
-                lignes.append({
-                    "k": k,
-                    "Solveur": solver,
-                    "Min": float(minv),
-                    "Max": float(maxv),
-                    "Médiane": float(median),
-                    "Moyenne": float(mean),
-                })
-            except ValueError:
-                pass
+def load_all(files):
+    frames = []
+    for f in files:
+        try:
+            df = read_results_file(f)
+            kpart = os.path.basename(f).split("_k")
+            if len(kpart) > 1:
+                k = int(kpart[1].split(".")[0])
+            else:
+                k = -1
+            df["k"] = k
+            frames.append(df[["name","time_ms","solved","k"]])
+        except Exception as e:
+            print(f"skip {f}: {e}")
+    if not frames:
+        return pd.DataFrame(columns=["name","time_ms","solved","k"])
+    return pd.concat(frames, ignore_index=True)
 
-if not lignes:
-    raise SystemExit("⚠️ Aucun résultat trouvé dans le dossier de données.")
+def main():
+    d, files = find_files()
+    if not files:
+        print("⚠️ Aucun résultat trouvé dans le dossier de données.")
+        return
+    os.makedirs(OUT_DIR, exist_ok=True)
 
-df = pd.DataFrame(lignes).sort_values(["Solveur", "k"]).reset_index(drop=True)
-solveurs = list(df["Solveur"].unique())
+    df = load_all(files)
+    if df.empty:
+        print("⚠️ Aucun résultat trouvé après chargement.")
+        return
 
-# ============================
-# Fonctions utilitaires
-# ============================
-def nom_fichier(nom: str) -> str:
-    return nom.lower().replace(" ", "_")
+    # aggregate: mean time per k per solver
+    agg = df.groupby(["k","name"])["time_ms"].mean().reset_index()
 
-def sauver(nom_base: str):
-    plt.tight_layout()
-    plt.savefig(f"{nom_base}.png", bbox_inches="tight")
-    print(f"✅ Enregistré : {nom_base}.png")
+    # plot per solver
+    for name, sub in agg.groupby("name"):
+        sub = sub.sort_values("k")
+        plt.figure()
+        plt.plot(sub["k"], sub["time_ms"], marker="o")
+        plt.xlabel("k (given cells)")
+        plt.ylabel("mean time (ms)")
+        plt.title(f"Solver: {name}")
+        out = os.path.join(OUT_DIR, f"{name}_moyenne.png")
+        plt.savefig(out, bbox_inches="tight")
+        plt.close()
+        print(f"saved {out}")
 
-# ============================
-# 1) Graphique détaillé par solveur (Moyenne, Médiane, Min–Max)
-# ============================
-for solveur in solveurs:
-    sous = df[df["Solveur"] == solveur].sort_values("k")
-    x = sous["k"].to_numpy()
-
-    plt.figure(figsize=(9, 6))
-    plt.fill_between(x, sous["Min"], sous["Max"], alpha=0.2, label="Min–Max")
-    plt.plot(x, sous["Moyenne"], marker="o", linewidth=2.2, label="Moyenne")
-    plt.plot(x, sous["Médiane"], marker="s", linestyle="--", linewidth=2.0, alpha=0.8, label="Médiane")
-
-    plt.title(f"Performance – {solveur}")
-    plt.xlabel("k (difficulté)")
-    plt.ylabel("Temps (s)")
-    plt.legend(frameon=True)
-    sauver(os.path.join(DOSSIER_SORTIE, f"{nom_fichier(solveur)}_detail"))
+    # global classement (lowest mean over all k first)
+    total = agg.groupby("name")["time_ms"].mean().sort_values()
+    plt.figure()
+    total.plot(kind="bar")
+    plt.ylabel("mean time over k (ms)")
+    plt.title("Classement global")
+    out = os.path.join(OUT_DIR, "classement_global.png")
+    plt.savefig(out, bbox_inches="tight")
     plt.close()
+    print(f"saved {out}")
 
-# ============================
-# 2) Graphique simple par solveur (Moyenne uniquement)
-# ============================
-for solveur in solveurs:
-    sous = df[df["Solveur"] == solveur].sort_values("k")
-    x = sous["k"].to_numpy()
-
-    plt.figure(figsize=(9, 6))
-    plt.plot(x, sous["Moyenne"], marker="o", linewidth=2.5, label="Moyenne", color="C0")
-
-    plt.title(f"Performance (Moyenne seule) – {solveur}")
-    plt.xlabel("k (difficulté)")
-    plt.ylabel("Temps (s)")
-    plt.legend(frameon=True)
-    sauver(os.path.join(DOSSIER_SORTIE, f"{nom_fichier(solveur)}_moyenne"))
-    plt.close()
-
-# ============================
-# 3) Classement global par k
-# ============================
-classement = (
-    df.groupby(["k", "Solveur"])["Moyenne"]
-      .mean()
-      .reset_index()
-      .sort_values(["k", "Moyenne"])
-)
-
-# correction ici ✅
-classement["Rang"] = classement.groupby("k")["Moyenne"].rank(method="min")
-
-plt.figure(figsize=(9, 6))
-for solveur in solveurs:
-    sous = classement[classement["Solveur"] == solveur]
-    plt.plot(sous["k"], sous["Rang"], marker="o", label=solveur)
-
-plt.gca().invert_yaxis()  # le meilleur rang = 1 en haut
-plt.title("Classement global par difficulté (k)")
-plt.xlabel("k (difficulté)")
-plt.ylabel("Rang (1 = meilleur)")
-plt.legend(frameon=True)
-sauver(os.path.join(DOSSIER_SORTIE, "classement_global"))
-plt.close()
-
-print("🎉 Tous les graphiques ont été générés avec succès.")
+if __name__ == "__main__":
+    main()

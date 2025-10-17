@@ -1,0 +1,70 @@
+// Simple text-mode interface for interacting from terminal.
+
+#include "interface.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+// cmd_new(): helper function.
+static void cmd_new(Grid* g, int k){
+    generator_new_k(k, g);
+    printf("Nouveau puzzle avec %d cases vides.\n", k);
+}
+
+// cmd_set(): helper function.
+static void cmd_set(Grid* g, int r, int c, int v){
+    if(r<1||r>9||c<1||c>9||v<0||v>9){ printf("Arguments invalides.\n"); return; }
+    r--; c--;
+    if(g->fixed[r][c]){ printf("Case initiale (non modifiable).\n"); return; }
+    if(v==0){ g->v[r][c]=0; return; }
+    // permissif: on accepte, verification via 'verifier' dans la GUI
+    g->v[r][c]=v;
+}
+
+// main(): helper function.
+int main(void){
+    Grid g; grid_clear(&g);
+    print_banner();
+    char line[256];
+    while(1){
+        printf("> ");
+        if(!fgets(line,sizeof(line),stdin)) break;
+        char cmd[32]={0}, a1[32]={0}, a2[32]={0}, a3[32]={0};
+        int n = sscanf(line, "%31s %31s %31s %31s", cmd,a1,a2,a3);
+        if(n<=0) continue;
+        if(strcmp(cmd,"nouveau")==0 && n>=2){
+            cmd_new(&g, atoi(a1));
+        }else if(strcmp(cmd,"afficher")==0){
+            grid_print(&g, stdout);
+        }else if(strcmp(cmd,"placer")==0 && n>=4){
+            cmd_set(&g, atoi(a1), atoi(a2), atoi(a3));
+        }else if(strcmp(cmd,"indice")==0){
+            if(solver_hint(&g)) printf("Une etape appliquee.\n");
+            else printf("Aucune etape simple.\n");
+        }else if (strcmp(cmd,"resoudre")==0 || strcmp(cmd,"solve")==0){
+            Grid base; grid_make_initial(g, &base);
+            solver_solve(&base); // DLX solver
+            *g = base;
+            printf("OK: grille resolue (DLX) a partir de la grille initiale.\n");
+        }else if(strcmp(cmd,"trace")==0 && n>=2){
+            if(strcmp(a1,"on")==0){ trace_enable(1); printf("Trace ON.\n"); }
+            else if(strcmp(a1,"off")==0){ trace_enable(0); printf("Trace OFF.\n"); }
+            else printf("Utilisation: trace on|off\n");
+        }else if(strcmp(cmd,"sauvegarder")==0){
+            const char* p = (n>=2)?a1:NULL;
+            if(save_game(p, &g)) printf("Sauvegarde ok.\n"); else printf("Echec sauvegarde.\n");
+        }else if(strcmp(cmd,"charger")==0){
+            const char* p = (n>=2)?a1:NULL;
+            if(load_game(p, &g)) printf("Chargement ok.\n"); else printf("Echec chargement.\n");
+        }else if(strcmp(cmd,"aide")==0){
+            print_help();
+        }else if(strcmp(cmd,"gui")==0){
+            return run_gui();
+        }else if(strcmp(cmd,"quitter")==0 || strcmp(cmd,"exit")==0){
+            break;
+        }else{
+            printf("Commande inconnue. Tapez 'aide'.\n");
+        }
+    }
+    return 0;
+}
